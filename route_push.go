@@ -217,6 +217,9 @@ func push(params map[string]interface{}) (int, error) {
 		switch val := val.(type) {
 		case string:
 			switch strings.ToLower(string(key)) {
+			case "id":
+				msg.Id = val
+				msg.ExtParams["id"] = val
 			case "device_key":
 				msg.DeviceKey = val
 			case "subtitle":
@@ -248,8 +251,9 @@ func push(params map[string]interface{}) (int, error) {
 		return 400, fmt.Errorf("device key is empty")
 	}
 
-	if msg.Body == "" && msg.Title == "" && msg.Subtitle == "" {
-		msg.Body = "Empty message"
+	if msg.IsEmptyAlert() {
+		// For encrypted push notifications, a Body is required; otherwise, APNs will discard the notification
+		msg.Body = "Empty Message"
 	}
 
 	deviceToken, err := db.DeviceTokenByKey(msg.DeviceKey)
